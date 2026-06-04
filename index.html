@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>혈액투석실 물 사용량 분석 시스템</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:    #070d1a;
+    --bg-panel:   #0c1525;
+    --bg-card:    #111e33;
+    --bg-input:   #0f1a2e;
+    --border:     #1e3050;
+    --border-glow:#1d4a8a;
+    --cyan:       #00d4ff;
+    --cyan-dim:   #0090bb;
+    --teal:       #00c2a8;
+    --teal-dim:   #007a6a;
+    --amber:      #ffb340;
+    --amber-dim:  #a87020;
+    --red:        #ff4f6b;
+    --green:      #3ddc97;
+    --text-hi:    #e8f4ff;
+    --text-mid:   #7aa2cc;
+    --text-lo:    #3a5a7a;
+    --artis:      #00d4ff;
+    --ak98:       #00c2a8;
+    --ro:         #ffb340;
+    --disinfect:  #a78bfa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-hi);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 16px; }
+
+  .logo-mark {
+    width: 48px; height: 48px;
+    border: 1.5px solid var(--cyan);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(0,212,255,0.25), inset 0 0 12px rgba(0,212,255,0.08);
+    position: relative;
+  }
+  .logo-mark svg { width: 26px; height: 26px; }
+
+  .header-title h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--cyan);
+    letter-spacing: 0.05em;
+  }
+  .header-title p {
+    font-size: 12px;
+    color: var(--text-mid);
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+  }
+
+  .header-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+  }
+  .dot-live {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 7px;
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,212,255,0.03);
+  }
+
+  .panel-header-icon {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .panel-header h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mid);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .panel-body { padding: 20px; }
+
+  /* ── INPUT GROUPS ── */
+  .input-section {
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .input-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .section-label-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .section-label span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+  .dot-artis { background: var(--artis); box-shadow: 0 0 6px var(--artis); }
+  .dot-ak98  { background: var(--ak98);  box-shadow: 0 0 6px var(--ak98);  }
+  .dot-ro    { background: var(--ro);    box-shadow: 0 0 6px var(--ro);    }
+  .dot-dis   { background: var(--disinfect); box-shadow: 0 0 6px var(--disinfect); }
+  .dot-dial  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+  .input-row:last-child { margin-bottom: 0; }
+
+  .input-label {
+    font-size: 13px;
+    color: var(--text-hi);
+    line-height: 1.3;
+    flex: 1;
+  }
+  .input-sublabel {
+    font-size: 11px;
+    color: var(--text-lo);
+    display: block;
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .input-control {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .btn-step {
+    width: 32px; height: 36px;
+    background: none;
+    border: none;
+    color: var(--text-mid);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .btn-step:hover { background: rgba(0,212,255,0.1); color: var(--cyan); }
+  .btn-step:active { background: rgba(0,212,255,0.2); }
+
+  .input-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-hi);
+    width: 52px;
+    text-align: center;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+  }
+  .input-val::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Duration input (wider) */
+  .duration-control {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .duration-control .input-val { width: 64px; }
+
+  /* Session toggle */
+  .toggle-group {
+    display: flex;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .toggle-btn {
+    padding: 7px 18px;
+    background: none;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-lo);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .toggle-btn.active {
+    background: var(--cyan);
+    color: var(--bg-deep);
+  }
+  .toggle-btn:not(.active):hover { color: var(--text-mid); background: rgba(255,255,255,0.04); }
+
+  /* ── HEATING DISINFECTION TOGGLE ── */
+  .dis-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-input);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .dis-row.dis-on {
+    border-color: rgba(167,139,250,0.4);
+    background: rgba(167,139,250,0.05);
+  }
+  .dis-row-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+  .dis-machine-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .tag-artis { background: rgba(0,212,255,0.12); color: var(--artis); border: 1px solid rgba(0,212,255,0.25); }
+  .tag-ak98  { background: rgba(0,194,168,0.12); color: var(--ak98);  border: 1px solid rgba(0,194,168,0.25); }
+  .dis-info { flex: 1; }
+  .dis-info-title { font-size: 12px; color: var(--text-hi); }
+  .dis-info-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-lo);
+    margin-top: 1px;
+  }
+  .dis-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  /* Toggle switch */
+  .toggle-switch {
+    position: relative;
+    width: 40px; height: 22px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 22px;
+    transition: background 0.2s;
+  }
+  .toggle-track::before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: var(--text-lo);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-track {
+    background: var(--disinfect);
+  }
+  .toggle-switch input:checked + .toggle-track::before {
+    transform: translateX(18px);
+    background: #fff;
+  }
+
+  /* Cycle selector (shown only when ON) */
+  .dis-cycle {
+    display: flex;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .dis-cycle.visible { opacity: 1; pointer-events: all; }
+  .cycle-btn {
+    padding: 4px 12px;
+    background: none;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-lo);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cycle-btn.active { background: var(--disinfect); color: #fff; }
+  .cycle-btn:not(.active):hover { color: var(--text-mid); }
+
+  /* ── RIGHT COLUMN ── */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── TOTAL BANNER ── */
+  .total-banner {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .total-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .total-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .total-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--cyan);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 30px rgba(0,212,255,0.4);
+  }
+  .total-unit {
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--cyan-dim);
+    margin-left: 4px;
+  }
+  .total-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-mid);
+  }
+  .total-sub strong {
+    color: var(--text-hi);
+    font-weight: 500;
+  }
+
+  .total-breakdown-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 200px;
+  }
+  .mini-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .mini-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .mini-label {
+    font-size: 12px;
+    color: var(--text-mid);
+    flex: 1;
+  }
+  .mini-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-hi);
+  }
+  .mini-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-lo);
+    width: 38px;
+    text-align: right;
+  }
+
+  /* ── CARDS GRID ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.card-artis::after  { background: linear-gradient(90deg, var(--artis), transparent); }
+  .stat-card.card-ak98::after   { background: linear-gradient(90deg, var(--ak98), transparent); }
+  .stat-card.card-ro::after     { background: linear-gradient(90deg, var(--ro), transparent); }
+  .stat-card.card-dis::after    { background: linear-gradient(90deg, var(--disinfect), transparent); }
+
+  .card-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .card-tag.artis { color: var(--artis); }
+  .card-tag.ak98  { color: var(--ak98); }
+  .card-tag.ro    { color: var(--ro); }
+  .card-tag.dis   { color: var(--disinfect); }
+
+  .card-main-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .card-main-val.artis { color: var(--artis); }
+  .card-main-val.ak98  { color: var(--ak98); }
+  .card-main-val.ro    { color: var(--ro); }
+  .card-main-val.dis   { color: var(--disinfect); }
+
+  .card-unit { font-size: 14px; font-weight: 300; margin-left: 2px; }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-mid);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  /* Progress bar */
+  .bar-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-fill.artis { background: linear-gradient(90deg, var(--artis), var(--cyan-dim)); }
+  .bar-fill.ak98  { background: linear-gradient(90deg, var(--ak98), var(--teal-dim)); }
+  .bar-fill.ro    { background: linear-gradient(90deg, var(--ro), var(--amber-dim)); }
+  .bar-fill.dis   { background: linear-gradient(90deg, var(--disinfect), #7c3aed); }
+
+  .card-rows { display: flex; flex-direction: column; gap: 6px; }
+  .card-row  {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-mid);
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 5px;
+  }
+  .card-row span:last-child {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-hi);
+    font-weight: 500;
+  }
+
+  /* ── STACKED BAR ── */
+  .stack-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+
+  .stack-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .stack-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .stack-bar {
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .stack-seg {
+    height: 100%;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .seg-artis  { background: var(--artis); }
+  .seg-ak98   { background: var(--ak98); }
+  .seg-ro     { background: var(--ro); }
+  .seg-dis    { background: var(--disinfect); }
+
+  .stack-legend {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .legend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .legend-color {
+    width: 20px; height: 3px;
+    border-radius: 2px;
+    margin-bottom: 4px;
+  }
+  .legend-name {
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+  .legend-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-hi);
+  }
+  .legend-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-lo);
+  }
+
+  /* ── RO DETAIL TABLE ── */
+  .ro-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .ro-table th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-lo);
+    padding: 6px 10px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ro-table td {
+    padding: 8px 10px;
+    color: var(--text-mid);
+    border-bottom: 1px solid rgba(30,48,80,0.5);
+    vertical-align: middle;
+  }
+  .ro-table tr:last-child td { border-bottom: none; }
+  .ro-table .val {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-hi);
+    font-weight: 500;
+    text-align: right;
+  }
+  .ro-table .total-row td {
+    color: var(--ro);
+    font-weight: 600;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .ro-table .total-row .val { font-size: 14px; color: var(--ro); }
+
+  /* ── SESSION DUAL INPUTS ── */
+  .session-row-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .sess-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+  .sess1-badge {
+    background: rgba(0,212,255,0.12);
+    color: var(--cyan);
+    border: 1px solid rgba(0,212,255,0.3);
+  }
+  .sess2-badge {
+    background: rgba(0,194,168,0.12);
+    color: var(--teal);
+    border: 1px solid rgba(0,194,168,0.3);
+  }
+  .dual-input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .overlap-info {
+    margin-top: 10px;
+    padding: 7px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-lo);
+    line-height: 1.6;
+    min-height: 16px;
+    transition: all 0.2s;
+  }
+  .overlap-info .ov-both { color: var(--amber); }
+  .overlap-info .ov-s1   { color: var(--cyan); }
+  .overlap-info .ov-s2   { color: var(--teal); }
+
+  /* ── FORMULA NOTE ── */
+  .formula-note {
+    background: rgba(0,212,255,0.03);
+    border: 1px solid rgba(0,212,255,0.1);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 14px;
+  }
+  .formula-note p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-lo);
+    line-height: 1.7;
+  }
+  .formula-note p strong {
+    color: var(--cyan-dim);
+    font-weight: 600;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .stack-legend { grid-template-columns: repeat(2, 1fr); }
+    .total-banner { grid-template-columns: 1fr; }
+    .total-value { font-size: 36px; }
+  }
+
+  /* Number animation */
+  @keyframes num-in {
+    from { opacity: 0.3; transform: translateY(3px); }
+    to   { opacity: 1;   transform: translateY(0); }
+  }
+  .animating { animation: num-in 0.25s ease-out; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="logo-mark">
+        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="13" cy="13" r="10" stroke="#00d4ff" stroke-width="1.5" opacity="0.4"/>
+          <path d="M13 4 L13 22 M4 13 L22 13" stroke="#00d4ff" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="13" cy="13" r="3" fill="#00d4ff" opacity="0.8"/>
+        </svg>
+      </div>
+      <div class="header-title">
+        <h1>HD WATER MONITOR</h1>
+        <p>혈액투석실 물 사용량 분석 시스템 v1.0</p>
+      </div>
+    </div>
+    <div class="header-badge"><span class="dot-live"></span>실시간 계산</div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout">
+
+    <!-- LEFT: INPUTS -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-header-icon"></div>
+        <h2>파라미터 설정</h2>
+      </div>
+      <div class="panel-body">
+
+        <!-- Dialysis duration -->
+        <div class="input-section">
+          <div class="section-label">
+            <div class="section-label-dot dot-dial"></div>
+            <span>투석 시간 설정</span>
+          </div>
+          <div class="input-row">
+            <div class="input-label">
+              투석 시간
+              <span class="input-sublabel">dialysis duration</span>
+            </div>
+            <div class="duration-control">
+              <button class="btn-step" onclick="step('dialysis',-10)">−</button>
+              <input class="input-val" id="dialysis" type="number" value="240" min="60" max="480" step="10" oninput="calculate()">
+              <button class="btn-step" onclick="step('dialysis',10)">+</button>
+            </div>
+          </div>
+          <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-lo); margin-top:-6px;">
+            분 (min) · <span id="dial_hr">4h 00m</span>
+          </div>
+        </div>
+
+        <!-- Sessions -->
+        <div class="input-section">
+          <div class="section-label">
+            <div class="section-label-dot dot-dial"></div>
+            <span>일일 투석 횟수</span>
+          </div>
+          <div class="input-row">
+            <div class="input-label">
+              하루 투석 세션
+              <span class="input-sublabel">sessions per day</span>
+            </div>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="sess1" onclick="setSession(1)">1회</button>
+              <button class="toggle-btn" id="sess2" onclick="setSession(2)">2회</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Artis Physio Plus -->
+        <div class="input-section">
+          <div class="section-label">
+            <div class="section-label-dot dot-artis"></div>
+            <span>Artis Physio Plus</span>
+          </div>
+          <!-- 1세션 단일 입력 -->
+          <div class="input-row" id="artis_single_row">
+            <div class="input-label">
+              사용 대수
+              <span class="input-sublabel">최대 16대 · 600 ml/min</span>
+            </div>
+            <div class="input-control">
+              <button class="btn-step" onclick="step('artis_n',-1)">−</button>
+              <input class="input-val" id="artis_n" type="number" value="16" min="0" max="16" oninput="clamp('artis_n',0,16); calculate()">
+              <button class="btn-step" onclick="step('artis_n',1)">+</button>
+            </div>
+          </div>
+          <!-- 2세션 분리 입력 -->
+          <div id="artis_dual_rows" style="display:none">
+            <div class="session-row-header">
+              <span class="sess-badge sess1-badge">1세션</span>
+              <span class="sess-badge sess2-badge">2세션</span>
+            </div>
+            <div class="dual-input-row">
+              <div class="input-label" style="font-size:12px">
+                1세션 사용 대수
+                <span class="input-sublabel">오전 투석</span>
+              </div>
+              <div class="input-control">
+                <button class="btn-step" onclick="step('artis_s1',-1)">−</button>
+                <input class="input-val" id="artis_s1" type="number" value="16" min="0" max="16" oninput="clamp('artis_s1',0,16); calculate()">
+                <button class="btn-step" onclick="step('artis_s1',1)">+</button>
+              </div>
+            </div>
+            <div class="dual-input-row" style="margin-top:8px">
+              <div class="input-label" style="font-size:12px">
+                2세션 사용 대수
+                <span class="input-sublabel">오후 투석</span>
+              </div>
+              <div class="input-control">
+                <button class="btn-step" onclick="step('artis_s2',-1)">−</button>
+                <input class="input-val" id="artis_s2" type="number" value="16" min="0" max="16" oninput="clamp('artis_s2',0,16); calculate()">
+                <button class="btn-step" onclick="step('artis_s2',1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AK98 -->
+        <div class="input-section">
+          <div class="section-label">
+            <div class="section-label-dot dot-ak98"></div>
+            <span>AK98</span>
+          </div>
+          <!-- 1세션 단일 입력 -->
+          <div class="input-row" id="ak98_single_row">
+            <div class="input-label">
+              사용 대수
+              <span class="input-sublabel">최대 16대 · 600 ml/min</span>
+            </div>
+            <div class="input-control">
+              <button class="btn-step" onclick="step('ak98_n',-1)">−</button>
+              <input class="input-val" id="ak98_n" type="number" value="16" min="0" max="16" oninput="clamp('ak98_n',0,16); calculate()">
+              <button class="btn-step" onclick="step('ak98_n',1)">+</button>
+            </div>
+          </div>
+          <!-- 2세션 분리 입력 -->
+          <div id="ak98_dual_rows" style="display:none">
+            <div class="session-row-header">
+              <span class="sess-badge sess1-badge">1세션</span>
+              <span class="sess-badge sess2-badge">2세션</span>
+            </div>
+            <div class="dual-input-row">
+              <div class="input-label" style="font-size:12px">
+                1세션 사용 대수
+                <span class="input-sublabel">오전 투석</span>
+              </div>
+              <div class="input-control">
+                <button class="btn-step" onclick="step('ak98_s1',-1)">−</button>
+                <input class="input-val" id="ak98_s1" type="number" value="16" min="0" max="16" oninput="clamp('ak98_s1',0,16); calculate()">
+                <button class="btn-step" onclick="step('ak98_s1',1)">+</button>
+              </div>
+            </div>
+            <div class="dual-input-row" style="margin-top:8px">
+              <div class="input-label" style="font-size:12px">
+                2세션 사용 대수
+                <span class="input-sublabel">오후 투석</span>
+              </div>
+              <div class="input-control">
+                <button class="btn-step" onclick="step('ak98_s2',-1)">−</button>
+                <input class="input-val" id="ak98_s2" type="number" value="16" min="0" max="16" oninput="clamp('ak98_s2',0,16); calculate()">
+                <button class="btn-step" onclick="step('ak98_s2',1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disinfection -->
+        <div class="input-section">
+          <div class="section-label">
+            <div class="section-label-dot dot-dis"></div>
+            <span>히팅 소독 (Heating Disinfection)</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+
+            <!-- Artis -->
+            <div class="dis-row" id="dis_row_a">
+              <div class="dis-row-left">
+                <span class="dis-machine-tag tag-artis">ARTIS</span>
+                <div class="dis-info">
+                  <div class="dis-info-title">히팅 소독 실시</div>
+                  <div class="dis-info-sub" id="dis_sub_a">10.6 L/대 · 미적용</div>
+                </div>
+              </div>
+              <div class="dis-row-right">
+                <div class="dis-cycle" id="dis_cycle_a">
+                  <button class="cycle-btn active" id="dca1" onclick="setCycle('a',1)">1회</button>
+                  <button class="cycle-btn"        id="dca2" onclick="setCycle('a',2)">2회</button>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="dis_toggle_a" onchange="toggleDis('a')">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- AK98 -->
+            <div class="dis-row" id="dis_row_k">
+              <div class="dis-row-left">
+                <span class="dis-machine-tag tag-ak98">AK98</span>
+                <div class="dis-info">
+                  <div class="dis-info-title">히팅 소독 실시</div>
+                  <div class="dis-info-sub" id="dis_sub_k">15.4 L/대 · 미적용</div>
+                </div>
+              </div>
+              <div class="dis-row-right">
+                <div class="dis-cycle" id="dis_cycle_k">
+                  <button class="cycle-btn active" id="dck1" onclick="setCycle('k',1)">1회</button>
+                  <button class="cycle-btn"        id="dck2" onclick="setCycle('k',2)">2회</button>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="dis_toggle_k" onchange="toggleDis('k')">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Formula note -->
+        <div class="formula-note" id="formula_note">
+          <p id="formula_text">
+            <strong>[Artis]</strong> FuncChk(34min) 15.4 + Wait(10min) 3.4 + 투석(T/60×30.1) + Disc 2.8 L<br>
+            <strong>[AK98]</strong> FuncChk(23min) 9.9 + Wait(5min) 0.2 + 투석(T/60×29.0) + Disc 3.3 L<br>
+            <strong>Chemical:</strong> Artis 20 L/대 · AK98 12 L/대 (매일 고정)<br>
+            <strong>Heating:</strong> Artis 10.6 L/대 · AK98 15.4 L/대 (선택)
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div class="right-col">
+
+      <!-- TOTAL BANNER -->
+      <div class="total-banner">
+        <div>
+          <div class="total-label">일일 총 물 사용량</div>
+          <div>
+            <span class="total-value" id="grand_total">0</span>
+            <span class="total-unit">L / day</span>
+          </div>
+          <div class="total-sub" id="total_sub">계산 중...</div>
+        </div>
+        <div class="total-breakdown-mini" id="mini_breakdown">
+          <div class="mini-item">
+            <div class="mini-dot" style="background:var(--artis)"></div>
+            <span class="mini-label">Artis Physio+</span>
+            <span class="mini-val" id="m_artis">—</span>
+            <span class="mini-pct" id="p_artis">—</span>
+          </div>
+          <div class="mini-item">
+            <div class="mini-dot" style="background:var(--ak98)"></div>
+            <span class="mini-label">AK98</span>
+            <span class="mini-val" id="m_ak98">—</span>
+            <span class="mini-pct" id="p_ak98">—</span>
+          </div>
+          <div class="mini-item">
+            <div class="mini-dot" style="background:var(--disinfect)"></div>
+            <span class="mini-label">소독</span>
+            <span class="mini-val" id="m_dis">—</span>
+            <span class="mini-pct" id="p_dis">—</span>
+          </div>
+          <div class="mini-item">
+            <div class="mini-dot" style="background:var(--ro)"></div>
+            <span class="mini-label">RO 시스템</span>
+            <span class="mini-val" id="m_ro">—</span>
+            <span class="mini-pct" id="p_ro">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STACKED BAR -->
+      <div class="stack-panel">
+        <div class="stack-header">
+          <span class="stack-title">구성 비율</span>
+        </div>
+        <div class="stack-bar">
+          <div class="stack-seg seg-artis" id="bar_artis" style="width:25%"></div>
+          <div class="stack-seg seg-ak98"  id="bar_ak98"  style="width:25%"></div>
+          <div class="stack-seg seg-dis"   id="bar_dis"   style="width:25%"></div>
+          <div class="stack-seg seg-ro"    id="bar_ro"    style="width:25%"></div>
+        </div>
+        <div class="stack-legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--artis)"></div>
+            <div class="legend-name">Artis Physio+</div>
+            <div class="legend-val" id="lg_artis">—</div>
+            <div class="legend-pct" id="lp_artis">—</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--ak98)"></div>
+            <div class="legend-name">AK98</div>
+            <div class="legend-val" id="lg_ak98">—</div>
+            <div class="legend-pct" id="lp_ak98">—</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--disinfect)"></div>
+            <div class="legend-name">소독</div>
+            <div class="legend-val" id="lg_dis">—</div>
+            <div class="legend-pct" id="lp_dis">—</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--ro)"></div>
+            <div class="legend-name">RO 시스템</div>
+            <div class="legend-val" id="lg_ro">—</div>
+            <div class="legend-pct" id="lp_ro">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="cards-grid">
+
+        <!-- Artis Card -->
+        <div class="stat-card card-artis">
+          <div class="card-tag artis">Artis Physio Plus</div>
+          <div class="card-main-val artis" id="c_artis_total">—<span class="card-unit">L</span></div>
+          <div class="card-sub" id="c_artis_sub">대기 30분 · 투석 — min · 600 ml/min</div>
+          <div class="bar-track"><div class="bar-fill artis" id="bar_artis2" style="width:60%"></div></div>
+          <div class="card-rows" id="artis_rows">
+            <div class="card-row"><span>대기(Standby)</span><span>—</span></div>
+            <div class="card-row"><span>투석(Dialysis)</span><span>—</span></div>
+            <div class="card-row"><span>린스(Rinse)</span><span>—</span></div>
+            <div class="card-row"><span>대수 × 세션</span><span>—</span></div>
+          </div>
+        </div>
+
+        <!-- AK98 Card -->
+        <div class="stat-card card-ak98">
+          <div class="card-tag ak98">AK98</div>
+          <div class="card-main-val ak98" id="c_ak98_total">—<span class="card-unit">L</span></div>
+          <div class="card-sub" id="c_ak98_sub">대기 10분 · 투석 — min · 600 ml/min</div>
+          <div class="bar-track"><div class="bar-fill ak98" id="bar_ak982" style="width:60%"></div></div>
+          <div class="card-rows" id="ak98_rows">
+            <div class="card-row"><span>대기(Standby)</span><span>—</span></div>
+            <div class="card-row"><span>투석(Dialysis)</span><span>—</span></div>
+            <div class="card-row"><span>Descaling</span><span>—</span></div>
+            <div class="card-row"><span>대수 × 세션</span><span>—</span></div>
+          </div>
+        </div>
+
+        <!-- Disinfection Card -->
+        <div class="stat-card card-dis">
+          <div class="card-tag dis">소독 (Disinfection)</div>
+          <div class="card-main-val dis" id="c_dis_total">—<span class="card-unit">L</span></div>
+          <div class="card-sub">Heating (선택) + Chemical (매일 고정)</div>
+          <div class="bar-track"><div class="bar-fill dis" id="bar_dis2" style="width:40%"></div></div>
+          <div class="card-rows" id="dis_rows">
+            <div class="card-row"><span>Artis 소독</span><span>—</span></div>
+            <div class="card-row"><span>AK98 소독</span><span>—</span></div>
+          </div>
+        </div>
+
+        <!-- RO Card -->
+        <div class="stat-card card-ro">
+          <div class="card-tag ro">RO 시스템 (고정값)</div>
+          <div class="card-main-val ro">18,300<span class="card-unit">L</span></div>
+          <div class="card-sub">배수(Reject) + 백워싱 + 야간운전</div>
+          <div class="bar-track"><div class="bar-fill ro" id="bar_ro2" style="width:50%"></div></div>
+          <div class="card-rows">
+            <div class="card-row"><span>06:00–24:00 배수 (18h)</span><span>16,200 L</span></div>
+            <div class="card-row"><span>전처리 백워싱 (90min)</span><span>1,350 L</span></div>
+            <div class="card-row"><span>야간 50분 추가운전</span><span>750 L</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RO DETAIL -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-header-icon" style="background:var(--ro); box-shadow:0 0 8px var(--ro)"></div>
+          <h2>RO 시스템 시간대별 상세</h2>
+        </div>
+        <div class="panel-body" style="padding:14px 20px">
+          <table class="ro-table">
+            <thead>
+              <tr>
+                <th>구간</th>
+                <th>내용</th>
+                <th>유량</th>
+                <th>시간</th>
+                <th style="text-align:right">소모량</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>06:00 – 24:00</td>
+                <td>RO 배수 (Reject water)</td>
+                <td>15 L/min</td>
+                <td>18시간 (1,080분)</td>
+                <td class="val">16,200 L</td>
+              </tr>
+              <tr>
+                <td>야간 (1회)</td>
+                <td>전처리 백워싱</td>
+                <td>15 L/min</td>
+                <td>90분</td>
+                <td class="val">1,350 L</td>
+              </tr>
+              <tr>
+                <td>00:00 – 05:00</td>
+                <td>야간 주기 운전 (총 50분)</td>
+                <td>15 L/min</td>
+                <td>50분</td>
+                <td class="val">750 L</td>
+              </tr>
+              <tr class="total-row">
+                <td colspan="4"><strong>RO 시스템 일일 합계</strong></td>
+                <td class="val"><strong>18,300 L</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px; font-size:11px; color:var(--text-lo); font-family:'IBM Plex Mono',monospace; line-height:1.6">
+            야간 주기: 자정~05:00, 2시간 간격 × 10분 운전 → 사용자 명시 총 50분 적용
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right-col -->
+  </div><!-- /layout -->
+
+</div><!-- /wrapper -->
+
+<script>
+  // ── 실측 단계별 물 소모량 상수 ──
+  const ARTIS = {
+    funcCheck:  15.4,   // Functional check (L, 고정)
+    funcMin:      34,   // Functional check 시간 (min, 표시용)
+    waitPer10:   3.4,   // Wait for patient – 10분당 (L)
+    waitMin:      10,   // Wait for patient 시간 (min)
+    dialPer60:  30.1,   // 투석 1시간당 (L)
+    disc:        2.8,   // Disconnection (L)
+    rinse:      13.4,   // 세션 간 린스 (L)
+    disinfect:  10.6,   // Heating 소독 1회 (L)
+    chemDis:    20.0,   // Chemical disinfection 일일 (L)
+  };
+  const AK98 = {
+    funcCheck:   9.9,   // Functional check (L, 고정)
+    funcMin:      23,   // Functional check 시간 (min, 표시용)
+    waitPer10:   0.4,
+    waitMin:       5,   // Wait for patient (Standby) 시간 (min)
+    dialPer60:  29.0,
+    disc:        3.3,
+    rinse:       4.0,
+    disinfect:  15.4,   // Heating 소독 1회 (L)
+    chemDis:    12.0,   // Chemical disinfection 일일 (L)
+  };
+
+  function perSession(eq, T) {
+    return eq.funcCheck
+         + (eq.waitMin / 10) * eq.waitPer10
+         + (T / 60) * eq.dialPer60
+         + eq.disc;
+  }
+
+  let sessions = 1;
+  // disA/disK: 0 = off, 1 = 1회, 2 = 2회
+  let disA = 0, disK = 0;
+  let cycleA = 1, cycleK = 1;
+
+  function toggleDis(type) {
+    const on = document.getElementById(`dis_toggle_${type}`).checked;
+    if (type === 'a') disA = on ? cycleA : 0;
+    else              disK = on ? cycleK : 0;
+
+    document.getElementById(`dis_row_${type}`).classList.toggle('dis-on', on);
+    document.getElementById(`dis_cycle_${type}`).classList.toggle('visible', on);
+    updateDisSub(type);
+    calculate();
+  }
+
+  function setCycle(type, n) {
+    if (type === 'a') {
+      cycleA = n; disA = n;
+      [1,2].forEach(i => document.getElementById('dca'+i).classList.toggle('active', i===n));
+    } else {
+      cycleK = n; disK = n;
+      [1,2].forEach(i => document.getElementById('dck'+i).classList.toggle('active', i===n));
+    }
+    updateDisSub(type);
+    calculate();
+  }
+
+  function updateDisSub(type) {
+    const on   = document.getElementById(`dis_toggle_${type}`).checked;
+    const L    = type === 'a' ? ARTIS.disinfect : AK98.disinfect;
+    const cyc  = type === 'a' ? cycleA : cycleK;
+    const el   = document.getElementById(`dis_sub_${type}`);
+    el.textContent = on ? `${L} L/대 · ${cyc}회 적용` : `${L} L/대 · 미적용`;
+  }
+
+  function step(id, delta) {
+    const el = document.getElementById(id);
+    let v = parseInt(el.value) + delta;
+    const mn = parseInt(el.min), mx = parseInt(el.max);
+    if (isNaN(v)) v = parseInt(el.value) || 0;
+    el.value = Math.max(mn, Math.min(mx, v));
+    calculate();
+  }
+
+  function clamp(id, mn, mx) {
+    const el = document.getElementById(id);
+    let v = parseInt(el.value);
+    if (isNaN(v)) v = 0;
+    el.value = Math.max(mn, Math.min(mx, v));
+  }
+
+  function setSession(n) {
+    sessions = n;
+    document.getElementById('sess1').classList.toggle('active', n === 1);
+    document.getElementById('sess2').classList.toggle('active', n === 2);
+
+    // Toggle single vs dual input display
+    const show2 = n === 2;
+    document.getElementById('artis_single_row').style.display = show2 ? 'none' : 'flex';
+    document.getElementById('artis_dual_rows').style.display  = show2 ? 'block' : 'none';
+    document.getElementById('ak98_single_row').style.display  = show2 ? 'none' : 'flex';
+    document.getElementById('ak98_dual_rows').style.display   = show2 ? 'block' : 'none';
+
+    // Update formula note
+    const formulaBase = `
+      <strong>[Artis]</strong> FuncChk(34min) 15.4 + Wait(10min) 3.4 + 투석(T/60×30.1) + Disc 2.8 L<br>
+      <strong>[AK98]</strong> FuncChk(23min) 9.9 + Wait(5min) 0.2 + 투석(T/60×29.0) + Disc 3.3 L<br>
+      <strong>Chemical:</strong> Artis 20 L/대 · AK98 12 L/대 (매일 고정)<br>
+      <strong>Heating:</strong> Artis 10.6 L/대 · AK98 15.4 L/대 (선택)`;
+    const formulaExtra = show2
+      ? `<br><strong>세션간 린스:</strong> Artis 13.4 L · AK98 4.0 L (양쪽 가동 시)` : '';
+    document.getElementById('formula_text').innerHTML = formulaBase + formulaExtra;
+
+    calculate();
+  }
+
+
+  function fmt(n) {
+    return n.toLocaleString('ko-KR', {maximumFractionDigits: 1});
+  }
+
+  function animEl(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('animating');
+    void el.offsetWidth;
+    el.classList.add('animating');
+  }
+
+  function getMachineCounts() {
+    if (sessions === 1) {
+      const artisN = Math.max(0, Math.min(16, parseInt(document.getElementById('artis_n').value) || 0));
+      const ak98N  = Math.max(0, Math.min(16, parseInt(document.getElementById('ak98_n').value)  || 0));
+      return { artisS1: artisN, artisS2: 0, ak98S1: ak98N, ak98S2: 0 };
+    } else {
+      const artisS1 = Math.max(0, Math.min(16, parseInt(document.getElementById('artis_s1').value) || 0));
+      const artisS2 = Math.max(0, Math.min(16, parseInt(document.getElementById('artis_s2').value) || 0));
+      const ak98S1  = Math.max(0, Math.min(16, parseInt(document.getElementById('ak98_s1').value)  || 0));
+      const ak98S2  = Math.max(0, Math.min(16, parseInt(document.getElementById('ak98_s2').value)  || 0));
+      return { artisS1, artisS2, ak98S1, ak98S2 };
+    }
+  }
+
+  function calcEquipWater(eq, T, s1, s2) {
+    /*
+      eq: ARTIS or AK98 constants
+      T: dialysis time in minutes
+      s1: machines in session 1, s2: machines in session 2 (0 when sessions===1)
+    */
+    const per1sess = perSession(eq, T);
+
+    if (sessions === 1) {
+      return { total: per1sess * s1, both: 0, onlyS1: s1, onlyS2: 0,
+               perBoth: 0, per1sess };
+    }
+    const both   = Math.min(s1, s2);
+    const onlyS1 = Math.max(0, s1 - s2);
+    const onlyS2 = Math.max(0, s2 - s1);
+
+    // Machines running both sessions: 2 × per1sess + inter-session rinse
+    const perBoth = per1sess * 2 + eq.rinse;
+
+    const total = perBoth * both + per1sess * (onlyS1 + onlyS2);
+    return { total, both, onlyS1, onlyS2, perBoth, per1sess };
+  }
+
+  function updateOverlapInfo(elId, both, onlyS1, onlyS2) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const parts = [];
+    if (both > 0)   parts.push(`<span class="ov-both">양쪽 모두: ${both}대</span>`);
+    if (onlyS1 > 0) parts.push(`<span class="ov-s1">1세션만: ${onlyS1}대</span>`);
+    if (onlyS2 > 0) parts.push(`<span class="ov-s2">2세션만: ${onlyS2}대</span>`);
+    el.innerHTML = parts.length ? parts.join(' · ') : '';
+  }
+
+  function calculate() {
+    const T = Math.max(60, parseInt(document.getElementById('dialysis').value) || 240);
+    const hrs = Math.floor(T/60), mins = T%60;
+    document.getElementById('dial_hr').textContent = `${hrs}h ${String(mins).padStart(2,'0')}m`;
+
+    const mc = getMachineCounts();
+
+    // ── Artis Physio Plus ──
+    const artis = calcEquipWater(ARTIS, T, mc.artisS1, mc.artisS2);
+
+    // ── AK98 ──
+    const ak98  = calcEquipWater(AK98,  T, mc.ak98S1,  mc.ak98S2);
+
+    // ── Disinfection ──
+    const artisUniq = sessions === 1 ? mc.artisS1 : Math.max(mc.artisS1, mc.artisS2);
+    const ak98Uniq  = sessions === 1 ? mc.ak98S1  : Math.max(mc.ak98S1,  mc.ak98S2);
+    // Heating (선택)
+    const heatArtis = ARTIS.disinfect * disA * artisUniq;
+    const heatAK98  = AK98.disinfect  * disK * ak98Uniq;
+    // Chemical (매일 고정)
+    const chemArtis = ARTIS.chemDis * artisUniq;
+    const chemAK98  = AK98.chemDis  * ak98Uniq;
+    const disTotal  = heatArtis + heatAK98 + chemArtis + chemAK98;
+
+    // ── RO System (fixed) ──
+    const roTotal = 18 * 60 * 15 + 90 * 15 + 50 * 15; // 18300 L
+
+    // ── Grand Total ──
+    const grand = artis.total + ak98.total + disTotal + roTotal;
+
+    // ── DOM Updates ──
+    const animIds = ['grand_total','c_artis_total','c_ak98_total','c_dis_total',
+                     'm_artis','m_ak98','m_dis','m_ro','lg_artis','lg_ak98','lg_dis','lg_ro'];
+    animIds.forEach(id => animEl(id));
+
+    // Grand total
+    document.getElementById('grand_total').textContent = fmt(grand);
+
+    const totalMachines = sessions === 1
+      ? mc.artisS1 + mc.ak98S1
+      : Math.max(mc.artisS1, mc.artisS2) + Math.max(mc.ak98S1, mc.ak98S2);
+    const sessLabel = sessions === 1
+      ? `<strong>1회</strong> 투석`
+      : `1세션 <strong>${mc.artisS1+mc.ak98S1}대</strong> · 2세션 <strong>${mc.artisS2+mc.ak98S2}대</strong>`;
+    document.getElementById('total_sub').innerHTML =
+      `총 <strong>${totalMachines}대</strong> 운영 · ${sessLabel} · 투석시간 <strong>${T}분</strong>`;
+
+    // Mini + legend
+    const pA = grand>0 ? (artis.total/grand*100).toFixed(1) : 0;
+    const pK = grand>0 ? (ak98.total /grand*100).toFixed(1) : 0;
+    const pD = grand>0 ? (disTotal   /grand*100).toFixed(1) : 0;
+    const pR = grand>0 ? (roTotal    /grand*100).toFixed(1) : 0;
+
+    ['artis','ak98','dis','ro'].forEach((k, i) => {
+      const vals = [artis.total, ak98.total, disTotal, roTotal];
+      const pcts = [pA, pK, pD, pR];
+      document.getElementById('m_'+k).textContent  = fmt(vals[i]) + ' L';
+      document.getElementById('p_'+k).textContent  = pcts[i] + '%';
+      document.getElementById('lg_'+k).textContent = fmt(vals[i]) + ' L';
+      document.getElementById('lp_'+k).textContent = pcts[i] + '%';
+    });
+
+    document.getElementById('bar_artis').style.width = pA + '%';
+    document.getElementById('bar_ak98').style.width  = pK + '%';
+    document.getElementById('bar_dis').style.width   = pD + '%';
+    document.getElementById('bar_ro').style.width    = pR + '%';
+
+    // ── Artis card ──
+    const maxBar = Math.max(artis.total, ak98.total, disTotal, roTotal) || 1;
+    document.getElementById('c_artis_total').innerHTML = fmt(artis.total) + '<span class="card-unit">L</span>';
+    const artisDialL = fmt((T/60) * ARTIS.dialPer60);
+    document.getElementById('c_artis_sub').textContent = sessions === 1
+      ? `1대당 ${fmt(artis.per1sess)} L · 투석 ${T}분`
+      : `오전 ${mc.artisS1}대 / 오후 ${mc.artisS2}대`;
+    document.getElementById('bar_artis2').style.width = (artis.total/maxBar*100) + '%';
+
+    const artisRows = document.getElementById('artis_rows');
+    const artisPhaseRow = `
+      <div class="card-row"><span>Functional check (${ARTIS.funcMin}min)</span><span>${fmt(ARTIS.funcCheck)} L</span></div>
+      <div class="card-row"><span>Wait for patient (${ARTIS.waitMin}min)</span><span>${fmt((ARTIS.waitMin/10)*ARTIS.waitPer10)} L</span></div>
+      <div class="card-row"><span>투석 ${T}분</span><span>${artisDialL} L</span></div>
+      <div class="card-row"><span>Disconnection</span><span>${fmt(ARTIS.disc)} L</span></div>
+      <div class="card-row"><span>1세션 1대당</span><span>${fmt(artis.per1sess)} L</span></div>
+    `;
+    if (sessions === 1) {
+      artisRows.innerHTML = artisPhaseRow + `
+        <div class="card-row"><span>합계 (${mc.artisS1}대)</span><span>${fmt(artis.total)} L</span></div>
+      `;
+    } else {
+      artisRows.innerHTML = artisPhaseRow + `
+        ${artis.both>0   ? `<div class="card-row"><span>오전+오후 양쪽 ${artis.both}대 (린스 ${fmt(ARTIS.rinse)}L 포함)</span><span>${fmt(artis.perBoth * artis.both)} L</span></div>` : ''}
+        ${artis.onlyS1>0 ? `<div class="card-row"><span>오전만 ${artis.onlyS1}대</span><span>${fmt(artis.per1sess * artis.onlyS1)} L</span></div>` : ''}
+        ${artis.onlyS2>0 ? `<div class="card-row"><span>오후만 ${artis.onlyS2}대</span><span>${fmt(artis.per1sess * artis.onlyS2)} L</span></div>` : ''}
+        <div class="card-row"><span>합계</span><span>${fmt(artis.total)} L</span></div>
+      `;
+    }
+
+    // ── AK98 card ──
+    const ak98DialL = fmt((T/60) * AK98.dialPer60);
+    document.getElementById('c_ak98_total').innerHTML = fmt(ak98.total) + '<span class="card-unit">L</span>';
+    document.getElementById('c_ak98_sub').textContent = sessions === 1
+      ? `1대당 ${fmt(ak98.per1sess)} L · 투석 ${T}분`
+      : `오전 ${mc.ak98S1}대 / 오후 ${mc.ak98S2}대`;
+    document.getElementById('bar_ak982').style.width = (ak98.total/maxBar*100) + '%';
+
+    const ak98Rows = document.getElementById('ak98_rows');
+    const ak98PhaseRow = `
+      <div class="card-row"><span>Functional check (${AK98.funcMin}min)</span><span>${fmt(AK98.funcCheck)} L</span></div>
+      <div class="card-row"><span>Wait for patient / Standby (${AK98.waitMin}min)</span><span>${fmt((AK98.waitMin/10)*AK98.waitPer10)} L</span></div>
+      <div class="card-row"><span>투석 ${T}분</span><span>${ak98DialL} L</span></div>
+      <div class="card-row"><span>Disconnection</span><span>${fmt(AK98.disc)} L</span></div>
+      <div class="card-row"><span>1세션 1대당</span><span>${fmt(ak98.per1sess)} L</span></div>
+    `;
+    if (sessions === 1) {
+      ak98Rows.innerHTML = ak98PhaseRow + `
+        <div class="card-row"><span>합계 (${mc.ak98S1}대)</span><span>${fmt(ak98.total)} L</span></div>
+      `;
+    } else {
+      ak98Rows.innerHTML = ak98PhaseRow + `
+        ${ak98.both>0   ? `<div class="card-row"><span>오전+오후 양쪽 ${ak98.both}대 (Descaling ${fmt(AK98.rinse)}L 포함)</span><span>${fmt(ak98.perBoth * ak98.both)} L</span></div>` : ''}
+        ${ak98.onlyS1>0 ? `<div class="card-row"><span>오전만 ${ak98.onlyS1}대</span><span>${fmt(ak98.per1sess * ak98.onlyS1)} L</span></div>` : ''}
+        ${ak98.onlyS2>0 ? `<div class="card-row"><span>오후만 ${ak98.onlyS2}대</span><span>${fmt(ak98.per1sess * ak98.onlyS2)} L</span></div>` : ''}
+        <div class="card-row"><span>합계</span><span>${fmt(ak98.total)} L</span></div>
+      `;
+    }
+
+    // ── Disinfection card ──
+    document.getElementById('c_dis_total').innerHTML = fmt(disTotal) + '<span class="card-unit">L</span>';
+    document.getElementById('bar_dis2').style.width = (disTotal/maxBar*100) + '%';
+    document.getElementById('dis_rows').innerHTML = `
+      <div class="card-row" style="opacity:0.5;font-size:11px;padding:3px 8px"><span>── Chemical disinfection (매일 고정) ──</span><span></span></div>
+      <div class="card-row"><span>Artis ${artisUniq}대 × ${ARTIS.chemDis}L</span><span>${fmt(chemArtis)} L</span></div>
+      <div class="card-row"><span>AK98 ${ak98Uniq}대 × ${AK98.chemDis}L</span><span>${fmt(chemAK98)} L</span></div>
+      <div class="card-row" style="opacity:0.5;font-size:11px;padding:3px 8px"><span>── Heating disinfection (선택) ──</span><span></span></div>
+      <div class="card-row">
+        <span>Artis ${artisUniq}대 × ${disA}회 × ${ARTIS.disinfect}L</span>
+        <span>${disA > 0 ? fmt(heatArtis)+' L' : '— (미적용)'}</span>
+      </div>
+      <div class="card-row">
+        <span>AK98 ${ak98Uniq}대 × ${disK}회 × ${AK98.disinfect}L</span>
+        <span>${disK > 0 ? fmt(heatAK98)+' L' : '— (미적용)'}</span>
+      </div>
+    `;
+
+    // ── RO bar ──
+    document.getElementById('bar_ro2').style.width = (roTotal/maxBar*100) + '%';
+  }
+
+  // Init
+  calculate();
+</script>
+</body>
+</html>
