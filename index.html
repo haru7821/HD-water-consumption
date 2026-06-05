@@ -8,61 +8,76 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-deep:    #070d1a;
-    --bg-panel:   #0c1525;
-    --bg-card:    #111e33;
-    --bg-input:   #0f1a2e;
-    --border:     #1e3050;
-    --border-glow:#1d4a8a;
-    --cyan:       #00d4ff;
-    --cyan-dim:   #0090bb;
-    --teal:       #00c2a8;
-    --teal-dim:   #007a6a;
-    --amber:      #ffb340;
-    --amber-dim:  #a87020;
-    --red:        #ff4f6b;
-    --green:      #3ddc97;
-    --text-hi:    #e8f4ff;
-    --text-mid:   #7aa2cc;
-    --text-lo:    #3a5a7a;
-    --artis:      #00d4ff;
-    --ak98:       #00c2a8;
-    --ro:         #ffb340;
-    --disinfect:  #a78bfa;
+    /* Vantive brand palette */
+    --plum:       #72256B;
+    --plum-dark:  #5a1a54;
+    --plum-light: rgba(114,37,107,0.09);
+    --pine:       #105742;
+    --pine-dark:  #0c4233;
+    --pine-light: rgba(16,87,66,0.10);
+    --cream:      #FFFAEB;
+    --euca:       #6CA07A;
+    --sage:       #CDDFD7;
+    --vamber:     #D4700A;
+    --vamber-lt:  rgba(212,112,10,0.10);
+    --vteal:      #0A7A8F;
+    --vteal-lt:   rgba(10,122,143,0.10);
+    --indigo:     #3B4DC8;
+    --indigo-lt:  rgba(59,77,200,0.10);
+
+    /* Semantic aliases */
+    --bg-deep:    var(--cream);
+    --bg-panel:   #ffffff;
+    --bg-card:    #ffffff;
+    --bg-input:   var(--cream);
+    --border:     rgba(0,0,0,0.09);
+    --border-glow:rgba(114,37,107,0.25);
+    --cyan:       var(--plum);
+    --cyan-dim:   var(--plum-dark);
+    --teal:       var(--pine);
+    --teal-dim:   var(--pine-dark);
+    --amber:      var(--vamber);
+    --amber-dim:  #a85800;
+    --red:        #C0392B;
+    --green:      var(--euca);
+    --text-hi:    #1C1C1E;
+    --text-mid:   #52525B;
+    --text-lo:    #A1A1AA;
+    --artis:      var(--plum);
+    --ak98:       var(--vteal);
+    --ro:         var(--vamber);
+    --disinfect:  var(--pine);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--bg-deep);
+    font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    background: var(--cream);
     color: var(--text-hi);
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* Background grid */
+  /* Subtle cream texture */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(114,37,107,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(114,37,107,0.025) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Glow orbs */
   body::after {
     content: '';
     position: fixed;
-    top: -200px;
-    left: -200px;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(114,37,107,0.04) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -81,53 +96,59 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    margin: -24px -20px 28px;
+    background: linear-gradient(135deg, var(--plum-dark) 0%, var(--plum) 55%, #8B3080 100%);
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+    box-shadow: 0 2px 20px rgba(92,27,86,0.25);
   }
 
   .header-left { display: flex; align-items: center; gap: 16px; }
 
   .logo-mark {
-    width: 48px; height: 48px;
-    border: 1.5px solid var(--cyan);
+    width: 44px; height: 44px;
+    border: 1.5px solid rgba(255,250,235,0.35);
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 20px rgba(0,212,255,0.25), inset 0 0 12px rgba(0,212,255,0.08);
+    background: rgba(255,250,235,0.1);
     position: relative;
   }
-  .logo-mark svg { width: 26px; height: 26px; }
+  .logo-mark svg { width: 24px; height: 24px; }
+  .logo-mark svg circle { stroke: #FFFAEB; }
+  .logo-mark svg path  { stroke: #FFFAEB; }
+  .logo-mark svg circle:last-child { fill: #FFFAEB; }
 
   .header-title h1 {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--cyan);
-    letter-spacing: 0.05em;
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFFAEB;
+    letter-spacing: 0.04em;
   }
   .header-title p {
-    font-size: 12px;
-    color: var(--text-mid);
+    font-size: 11px;
+    color: rgba(255,250,235,0.55);
     margin-top: 2px;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
   }
 
   .header-badge {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
-    color: var(--text-mid);
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    padding: 6px 14px;
+    color: rgba(255,250,235,0.75);
+    background: rgba(255,250,235,0.1);
+    border: 1px solid rgba(255,250,235,0.2);
+    padding: 5px 14px;
     border-radius: 20px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.07em;
   }
   .dot-live {
     display: inline-block;
     width: 6px; height: 6px;
-    background: var(--green);
+    background: var(--euca);
     border-radius: 50%;
     margin-right: 7px;
-    box-shadow: 0 0 6px var(--green);
+    box-shadow: 0 0 6px var(--euca);
     animation: pulse-dot 2s ease-in-out infinite;
   }
   @keyframes pulse-dot {
@@ -146,18 +167,19 @@
   /* ── PANEL ── */
   .panel {
     background: var(--bg-panel);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   }
 
   .panel-header {
     padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1.5px solid var(--border);
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(0,212,255,0.03);
+    background: rgba(114,37,107,0.03);
   }
 
   .panel-header-icon {
@@ -255,8 +277,8 @@
     transition: all 0.15s;
     line-height: 1;
   }
-  .btn-step:hover { background: rgba(0,212,255,0.1); color: var(--cyan); }
-  .btn-step:active { background: rgba(0,212,255,0.2); }
+  .btn-step:hover { background: var(--plum-light); color: var(--plum); }
+  .btn-step:active { background: rgba(114,37,107,0.15); }
 
   .input-val {
     font-family: 'IBM Plex Mono', monospace;
@@ -307,10 +329,10 @@
     letter-spacing: 0.05em;
   }
   .toggle-btn.active {
-    background: var(--cyan);
-    color: var(--bg-deep);
+    background: var(--plum);
+    color: #FFFAEB;
   }
-  .toggle-btn:not(.active):hover { color: var(--text-mid); background: rgba(255,255,255,0.04); }
+  .toggle-btn:not(.active):hover { color: var(--text-mid); background: rgba(0,0,0,0.04); }
 
   /* ── HEATING DISINFECTION TOGGLE ── */
   .dis-row {
@@ -319,14 +341,14 @@
     justify-content: space-between;
     gap: 10px;
     padding: 10px 12px;
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     background: var(--bg-input);
     transition: border-color 0.2s, background 0.2s;
   }
   .dis-row.dis-on {
-    border-color: rgba(167,139,250,0.4);
-    background: rgba(167,139,250,0.05);
+    border-color: rgba(16,87,66,0.35);
+    background: var(--pine-light);
   }
   .dis-row-left { display: flex; align-items: center; gap: 10px; flex: 1; }
   .dis-machine-tag {
@@ -375,7 +397,7 @@
     transition: transform 0.2s, background 0.2s;
   }
   .toggle-switch input:checked + .toggle-track {
-    background: var(--disinfect);
+    background: var(--pine);
   }
   .toggle-switch input:checked + .toggle-track::before {
     transform: translateX(18px);
@@ -405,7 +427,7 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .cycle-btn.active { background: var(--disinfect); color: #fff; }
+  .cycle-btn.active { background: var(--pine); color: #FFFAEB; }
   .cycle-btn:not(.active):hover { color: var(--text-mid); }
 
   /* ── RIGHT COLUMN ── */
@@ -428,7 +450,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(0,212,255,0.04) 0%, transparent 60%);
+    background: linear-gradient(135deg, rgba(114,37,107,0.04) 0%, transparent 60%);
     pointer-events: none;
   }
 
@@ -444,15 +466,14 @@
     font-family: 'IBM Plex Mono', monospace;
     font-size: 48px;
     font-weight: 700;
-    color: var(--cyan);
+    color: var(--plum);
     line-height: 1;
     letter-spacing: -0.02em;
-    text-shadow: 0 0 30px rgba(0,212,255,0.4);
   }
   .total-unit {
     font-size: 20px;
     font-weight: 300;
-    color: var(--cyan-dim);
+    color: var(--plum-dark);
     margin-left: 4px;
   }
   .total-sub {
@@ -510,11 +531,12 @@
 
   .stat-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 18px 20px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
   .stat-card::after {
     content: '';
@@ -587,14 +609,14 @@
     font-size: 12px;
     color: var(--text-mid);
     padding: 5px 8px;
-    background: rgba(255,255,255,0.02);
+    background: rgba(0,0,0,0.02);
     border-radius: 5px;
   }
   .card-row span:last-child {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
     color: var(--text-hi);
-    font-weight: 500;
+    font-weight: 600;
   }
 
   /* ── STACKED BAR ── */
@@ -632,10 +654,10 @@
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
   }
-  .seg-artis  { background: var(--artis); }
-  .seg-ak98   { background: var(--ak98); }
-  .seg-ro     { background: var(--ro); }
-  .seg-dis    { background: var(--disinfect); }
+  .seg-artis  { background: var(--plum); }
+  .seg-ak98   { background: var(--vteal); }
+  .seg-ro     { background: var(--vamber); }
+  .seg-dis    { background: var(--pine); }
 
   .stack-legend {
     display: grid;
@@ -722,14 +744,14 @@
     text-transform: uppercase;
   }
   .sess1-badge {
-    background: rgba(0,212,255,0.12);
-    color: var(--cyan);
-    border: 1px solid rgba(0,212,255,0.3);
+    background: var(--plum-light);
+    color: var(--plum);
+    border: 1px solid rgba(114,37,107,0.25);
   }
   .sess2-badge {
-    background: rgba(0,194,168,0.12);
-    color: var(--teal);
-    border: 1px solid rgba(0,194,168,0.3);
+    background: var(--pine-light);
+    color: var(--pine);
+    border: 1px solid rgba(16,87,66,0.25);
   }
   .dual-input-row {
     display: flex;
@@ -755,8 +777,8 @@
 
   /* ── FORMULA NOTE ── */
   .formula-note {
-    background: rgba(0,212,255,0.03);
-    border: 1px solid rgba(0,212,255,0.1);
+    background: var(--pine-light);
+    border: 1px solid rgba(16,87,66,0.15);
     border-radius: 8px;
     padding: 12px 14px;
     margin-top: 14px;
@@ -764,18 +786,18 @@
   .formula-note p {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
-    color: var(--text-lo);
+    color: var(--text-mid);
     line-height: 1.7;
   }
   .formula-note p strong {
-    color: var(--cyan-dim);
-    font-weight: 600;
+    color: var(--pine);
+    font-weight: 700;
   }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: var(--sage); border-radius: 2px; }
 
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
@@ -825,6 +847,27 @@
         <h2>파라미터 설정</h2>
       </div>
       <div class="panel-body">
+
+        <!-- Dialysate Flow -->
+        <div class="input-section">
+          <div class="section-label">
+            <div class="section-label-dot dot-dial"></div>
+            <span>Dialysate Flow</span>
+          </div>
+          <div class="input-row">
+            <div class="input-label">
+              유량 설정
+              <span class="input-sublabel">dialysate flow rate</span>
+            </div>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="flow500" onclick="setFlow(500)">500 ml/min</button>
+              <button class="toggle-btn"        id="flow600" onclick="setFlow(600)">600 ml/min</button>
+            </div>
+          </div>
+          <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-lo); margin-top:-4px;">
+            투석 물량 — Artis: <span id="flow_artis_val">30.1</span> L/hr · AK98: <span id="flow_ak98_val">29.0</span> L/hr
+          </div>
+        </div>
 
         <!-- Dialysis duration -->
         <div class="input-section">
@@ -876,7 +919,7 @@
           <div class="input-row" id="artis_single_row">
             <div class="input-label">
               사용 대수
-              <span class="input-sublabel">최대 16대 · 600 ml/min</span>
+              <span class="input-sublabel">최대 16대 · 500 ml/min</span>
             </div>
             <div class="input-control">
               <button class="btn-step" onclick="step('artis_n',-1)">−</button>
@@ -925,7 +968,7 @@
           <div class="input-row" id="ak98_single_row">
             <div class="input-label">
               사용 대수
-              <span class="input-sublabel">최대 16대 · 600 ml/min</span>
+              <span class="input-sublabel">최대 16대 · 500 ml/min</span>
             </div>
             <div class="input-control">
               <button class="btn-step" onclick="step('ak98_n',-1)">−</button>
@@ -1020,8 +1063,8 @@
         <!-- Formula note -->
         <div class="formula-note" id="formula_note">
           <p id="formula_text">
-            <strong>[Artis]</strong> FuncChk(34min) 15.4 + Wait(10min) 3.4 + 투석(T/60×30.1) + Disc 2.8 L<br>
-            <strong>[AK98]</strong> FuncChk(23min) 9.9 + Wait(5min) 0.2 + 투석(T/60×29.0) + Disc 3.3 L<br>
+            <strong>[Artis]</strong> FuncChk(34min) 15.4 + Wait(10min) 3.4 + 투석(T/60×36.12) + Disc 2.8 L<br>
+            <strong>[AK98]</strong> FuncChk(23min) 9.9 + Wait(5min) 0.2 + 투석(T/60×34.8) + Disc 3.3 L<br>
             <strong>Chemical:</strong> Artis 20 L/대 · AK98 12 L/대 (매일 고정)<br>
             <strong>Heating:</strong> Artis 10.6 L/대 · AK98 15.4 L/대 (선택)
           </p>
@@ -1117,7 +1160,7 @@
         <div class="stat-card card-artis">
           <div class="card-tag artis">Artis Physio Plus</div>
           <div class="card-main-val artis" id="c_artis_total">—<span class="card-unit">L</span></div>
-          <div class="card-sub" id="c_artis_sub">대기 30분 · 투석 — min · 600 ml/min</div>
+          <div class="card-sub" id="c_artis_sub">대기 30분 · 투석 — min · 500 ml/min</div>
           <div class="bar-track"><div class="bar-fill artis" id="bar_artis2" style="width:60%"></div></div>
           <div class="card-rows" id="artis_rows">
             <div class="card-row"><span>대기(Standby)</span><span>—</span></div>
@@ -1131,7 +1174,7 @@
         <div class="stat-card card-ak98">
           <div class="card-tag ak98">AK98</div>
           <div class="card-main-val ak98" id="c_ak98_total">—<span class="card-unit">L</span></div>
-          <div class="card-sub" id="c_ak98_sub">대기 10분 · 투석 — min · 600 ml/min</div>
+          <div class="card-sub" id="c_ak98_sub">대기 10분 · 투석 — min · 500 ml/min</div>
           <div class="bar-track"><div class="bar-fill ak98" id="bar_ak982" style="width:60%"></div></div>
           <div class="card-rows" id="ak98_rows">
             <div class="card-row"><span>대기(Standby)</span><span>—</span></div>
@@ -1222,9 +1265,9 @@
     </div><!-- /right-col -->
   </div><!-- /layout -->
 
-  <div style="text-align:right; margin-top:32px; padding-top:16px; border-top:1px solid var(--border);">
+  <div style="text-align:right; margin-top:32px; padding-top:16px; border-top:1.5px solid var(--border);">
     <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-lo); letter-spacing:0.08em;">
-      made by nackhoon choi
+      made by NH
     </span>
   </div>
 
@@ -1232,27 +1275,34 @@
 
 <script>
   // ── 실측 단계별 물 소모량 상수 ──
+  // Dialysate flow별 투석 물량 (L/hr)
+  const DIAL_FLOW = {
+    500: { artis: 30.1,  ak98: 29.0 },
+    600: { artis: 36.12, ak98: 34.8 },
+  };
+  let dialFlow = 500; // 기본값
+
   const ARTIS = {
-    funcCheck:  15.4,   // Functional check (L, 고정)
-    funcMin:      34,   // Functional check 시간 (min, 표시용)
-    waitPer10:   3.4,   // Wait for patient – 10분당 (L)
-    waitMin:      10,   // Wait for patient 시간 (min)
-    dialPer60:  30.1,   // 투석 1시간당 (L)
-    disc:        2.8,   // Disconnection (L)
-    rinse:      13.4,   // 세션 간 린스 (L)
-    disinfect:  10.6,   // Heating 소독 1회 (L)
-    chemDis:    20.0,   // Chemical disinfection 일일 (L)
+    funcCheck:  15.4,
+    funcMin:      34,
+    waitPer10:   3.4,
+    waitMin:      10,
+    get dialPer60() { return DIAL_FLOW[dialFlow].artis; },
+    disc:        2.8,
+    rinse:      13.4,
+    disinfect:  10.6,
+    chemDis:    20.0,
   };
   const AK98 = {
-    funcCheck:   9.9,   // Functional check (L, 고정)
-    funcMin:      23,   // Functional check 시간 (min, 표시용)
+    funcCheck:   9.9,
+    funcMin:      23,
     waitPer10:   0.4,
-    waitMin:       5,   // Wait for patient (Standby) 시간 (min)
-    dialPer60:  29.0,
+    waitMin:       5,
+    get dialPer60() { return DIAL_FLOW[dialFlow].ak98; },
     disc:        3.3,
     rinse:       4.0,
-    disinfect:  15.4,   // Heating 소독 1회 (L)
-    chemDis:    12.0,   // Chemical disinfection 일일 (L)
+    disinfect:  15.4,
+    chemDis:    12.0,
   };
 
   function perSession(eq, T) {
@@ -1260,6 +1310,13 @@
          + (eq.waitMin / 10) * eq.waitPer10
          + (T / 60) * eq.dialPer60
          + eq.disc;
+  }
+
+  function setFlow(val) {
+    dialFlow = val;
+    document.getElementById('flow500').classList.toggle('active', val === 500);
+    document.getElementById('flow600').classList.toggle('active', val === 600);
+    calculate();
   }
 
   let sessions = 1;
@@ -1326,15 +1383,6 @@
     document.getElementById('ak98_single_row').style.display  = show2 ? 'none' : 'flex';
     document.getElementById('ak98_dual_rows').style.display   = show2 ? 'block' : 'none';
 
-    // Update formula note
-    const formulaBase = `
-      <strong>[Artis]</strong> FuncChk(34min) 15.4 + Wait(10min) 3.4 + 투석(T/60×30.1) + Disc 2.8 L<br>
-      <strong>[AK98]</strong> FuncChk(23min) 9.9 + Wait(5min) 0.2 + 투석(T/60×29.0) + Disc 3.3 L<br>
-      <strong>Chemical:</strong> Artis 20 L/대 · AK98 12 L/대 (매일 고정)<br>
-      <strong>Heating:</strong> Artis 10.6 L/대 · AK98 15.4 L/대 (선택)`;
-    const formulaExtra = show2
-      ? `<br><strong>세션간 린스:</strong> Artis 13.4 L · AK98 4.0 L (양쪽 가동 시)` : '';
-    document.getElementById('formula_text').innerHTML = formulaBase + formulaExtra;
 
     calculate();
   }
@@ -1403,6 +1451,18 @@
     const T = Math.max(60, parseInt(document.getElementById('dialysis').value) || 240);
     const hrs = Math.floor(T/60), mins = T%60;
     document.getElementById('dial_hr').textContent = `${hrs}h ${String(mins).padStart(2,'0')}m`;
+
+    // Update flow display & formula note
+    document.getElementById('flow_artis_val').textContent = ARTIS.dialPer60;
+    document.getElementById('flow_ak98_val').textContent  = AK98.dialPer60;
+    const formulaBase = `
+      <strong>[Artis]</strong> FuncChk(34min) 15.4 + Wait(10min) 3.4 + 투석(T/60×${ARTIS.dialPer60}) + Disc 2.8 L<br>
+      <strong>[AK98]</strong> FuncChk(23min) 9.9 + Wait(5min) 0.2 + 투석(T/60×${AK98.dialPer60}) + Disc 3.3 L<br>
+      <strong>Chemical:</strong> Artis 20 L/대 · AK98 12 L/대 (매일 고정)<br>
+      <strong>Heating:</strong> Artis 10.6 L/대 · AK98 15.4 L/대 (선택)`;
+    const formulaExtra = sessions === 2
+      ? `<br><strong>세션간 린스:</strong> Artis 13.4 L · AK98 4.0 L (양쪽 가동 시)` : '';
+    document.getElementById('formula_text').innerHTML = formulaBase + formulaExtra;
 
     const mc = getMachineCounts();
 
